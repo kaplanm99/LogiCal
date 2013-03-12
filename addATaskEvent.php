@@ -4,11 +4,11 @@
 
     require('db/config.php');
     $mysqli = new mysqli($host, $username, $password, $db);                    
-    if ($stmt = $mysqli->prepare("SELECT te.event_id, te.start_time, te.end_time, t.what FROM TaskEvents te, Tasks t WHERE te.email = ? AND te.added_to_g_cal = 0 AND te.task_id = t.id;")) {
+    if ($stmt = $mysqli->prepare("SELECT te.start_time, te.end_time, t.what FROM TaskEvents te, Tasks t WHERE te.email = ? AND ISNULL(te.event_id) AND te.task_id = t.id;")) {
         $stmt->bind_param('s', $_SESSION['email']);
         $stmt->execute();
         
-        $stmt->bind_result($te_event_id, $te_start_time, $te_end_time, $t_what);
+        $stmt->bind_result($te_start_time, $te_end_time, $t_what);
                     
         if($stmt->fetch()) {
             //print($te_event_id . "," . $te_start_time . "," . $te_end_time . "," . $t_what);
@@ -17,31 +17,36 @@
                 
                 $event = new Google_Event();
                 $event->setSummary($t_what);
-                $event->setDescription($te_event_id);
+                $event->setDescription("");
                 
                 $start = new Google_EventDateTime();
                 $start->setDateTime($te_start_time);
-                $start->setTimeZone($logiCalTimeZone);
+                $start->setTimeZone("America/New_York");
                 $event->setStart($start);
                 
                 $end = new Google_EventDateTime();
                 $end->setDateTime($te_end_time);
-                $end->setTimeZone($logiCalTimeZone);
+                $end->setTimeZone("America/New_York");
                 $event->setEnd($end);
                 
-                $createdEvent = $cal->events->insert($logiCalId, $event);
+                unset($createdEvent);
+                
+                $createdEvent = $cal->events->insert($ltCal->getId(), $event);
                 
                 /////
                 
                 $stmt->close();
                 
-                if ($stmt = $mysqli->prepare("UPDATE TaskEvents SET added_to_g_cal = 1 WHERE event_id = ?;")) {
-                    $stmt->bind_param('i', $te_event_id);
-                    $stmt->execute();
+                if(isset($createdEvent)) {
+                // set event_id here from the returned event here
+                // and keep in mind that email, start_time is the primary key
+                    if ($stmt = $mysqli->prepare("UPDATE TaskEvents SET event_id = ? WHERE email = ? AND start_time = ?;")) {
+                        $stmt->bind_param('sss', $createdEvent['id'], $_SESSION['email'], $te_start_time);
+                        $stmt->execute();
+                    }
+                    
+                    $stmt->close();
                 }
-                
-                $stmt->close();
-                
                 
             } catch (Exception $e) {
                 echo 'Caught exception: ',  $e->getMessage(), "\n";

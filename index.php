@@ -47,29 +47,33 @@ if ($client->getAccessToken()) {
   $calList = $cal->calendarList->listCalendarList();
   //$calListMarkup = "<h1>Calendar List</h1><pre>" . print_r($calList["items"], true) . "</pre>";
   
-  $logiCalId = "";
-  $logiCalTimeZone = "";
-  foreach ($calList["items"] as $tempCal) {
-    if($tempCal["summary"] == "LogiCal Tasks") {
-        $logiCalId = $tempCal["id"];
-    }
-    
-    if($tempCal["id"] == $_SESSION['email']){
-        $logiCalTimeZone = $tempCal["timeZone"];
-    }
-  }
+  require('LogiCalTasksCalendar.php');
+  $ltCal = new LogiCalTasksCalendar($_SESSION['email'] );
+  //$ltCal->setId("1");
   
-  //print ("$logiCalTimeZone");
-  
-  if($logiCalId == "") {
+  if($ltCal->getId() == "") {
     $calendar = new Google_Calendar();
     $calendar->setSummary('LogiCal Tasks');
-    $calendar->setTimeZone($logiCalTimeZone);
+    $calendar->setTimeZone("America/New_York");
 
     $createdCalendar = $cal->calendars->insert($calendar);
-    $logiCalId = $createdCalendar->getId();
+    
+    $ltCal->setId($createdCalendar['id']);
+    
+  } else {
+    try {
+        $googleLogiCalTasksCal = $cal->calendarList->get($ltCal->getId());
+        //if(isset($googleLogiCalTasksCal)){
+        //    print ("HI");
+        //} else {
+        //    print ("BYE");
+        //}
+        
+    } catch (Exception $e) {
+        echo 'Caught exception: ',  $e->getMessage(), "\n";
+        // need to remake calendar using code above
+    }  
   }
-  
   
   if(isset($_GET["addATaskEvent"])) {
     // a GET request with this parameter equal to 1 should be made
@@ -99,6 +103,27 @@ if ($client->getAccessToken()) {
         margin-left:auto;
         margin-right:auto;
     }
+    #email {
+        font-size: 12px;
+    }
+    .deleteButton {
+        float:right;
+    }
+    .task {
+        border-top:1px solid black;
+        border-bottom: 1px solid black;
+        font-size: 13px;
+        margin-bottom: -1px;
+    }
+    .taskList {
+        height:427px;overflow-y:auto;
+    }
+    
+    .logout {
+        float: right;
+        margin-right: 5px;
+    }
+    
 </style>
 
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
@@ -109,13 +134,8 @@ if ($client->getAccessToken()) {
 
 </head>
 <body>
-<h1>LogiCal</h1>
 
 <?php
-    print "<a class='logout' href='?logout'>Logout</a>";
-
-      ////////////////////////////////////////////////////////
-      
       require ("addTask.php");
       
       require ("getTasks.php");
@@ -125,27 +145,8 @@ if ($client->getAccessToken()) {
       $taskListMarkup = "";
       
       foreach ($tasks as $task) {
-        $taskListMarkup = $taskListMarkup . "<div style=\"border:1px solid black;\" >Id: " . $task["id"] . "<br/>What: " . $task["what"] . "<br/>Due date: " . $task["due_date"] . "<br/>Due Time: " . $task["due_hour"] . ":" . $task["due_minute"] . " " . $task["due_am_or_pm"] . "<br/>Estimated effort: " . $task["estimated_effort"] . "<br/>Task distribution: " . $task["task_distribution"] . "</div>";
+        $taskListMarkup = $taskListMarkup . "<div class=\"task\" ><form action=\"index.php\" method=\"POST\"><input type=\"hidden\" name=\"deleteId\" value=\"" . $task["id"] . "\" ><input type=\"image\" src=\"deleteButton.png\" class=\"deleteButton\" ></form>" . $task["what"] . "<br/>Due: " . $task["due_date"] . " " . $task["due_hour"] . ":" . $task["due_minute"] . $task["due_am_or_pm"] . "<br/>Hours Remaining: " . $task["estimated_effort"] . "</div>";
       }
-      
-      ////////////////////////////////////////////
-      
-      //$eventList = $cal->events->listEvents($logiCalId);
-      /*
-      foreach ($eventList["items"] as $tempEvt) {
-        $calListMarkup = $calListMarkup . "description" . $tempEvt["description"] . "<br/>";
-      }
-      */
-      //$calListMarkup = $calListMarkup . print_r($eventList["items"], true);
-  
-      if(isset($_SESSION['email'] )){ 
-        print $_SESSION['email']; 
-      }
-      /*
-      if(isset($calListMarkup)){ 
-        print $calListMarkup; 
-      }
-      */    
 ?>
 
 <div style="width:160px;height:500px;border:1px solid black;position:relative;">
@@ -163,7 +164,7 @@ if ($client->getAccessToken()) {
                 <option value="PM" selected="">PM</option>
             </select>
             <br><br>
-            Estimated Effort (in hours)<input type="text" name="estimated_effort" value="" size="18">
+            Hours of Work<input type="text" name="estimated_effort" value="" size="18">
             <br><br>Task Distribution
             <input type="hidden" id="task_distribution" name="task_distribution" value="50">
           </p>
@@ -175,11 +176,22 @@ if ($client->getAccessToken()) {
         </p>
       </form>      
   </div>
+  <img src="logo.png" style="float: left;width: 100px;"/>
+  
+  <?php
+    print "<a class='logout' href='?logout'>Logout</a>";
+  
+    if(isset($_SESSION['email'] )){ 
+        print "<span id=\"email\">";
+        print $_SESSION['email']; 
+        print "</span>";
+    }
+  ?>
   <form NAME="add" ACTION="" METHOD="GET">
       <input TYPE="button" NAME="createTask" Value="Create Task" onClick="popupTaskForm();">
   </form>
   
-  <div style="height:400px;overflow-y:scroll;border:1px solid red;">
+  <div class="taskList" >
       <div id="content_div">
       <?
         if(isset($taskListMarkup)){ 
@@ -190,108 +202,11 @@ if ($client->getAccessToken()) {
   </div>
 </div>
 
-<?php
-/*  
-  foreach ($tasks as $task) {
-    $event = new Google_Event();
-    $event->setSummary($task["what"] . " is due now");
-    $event->setDescription($task["id"]);
-    $start = new Google_EventDateTime();
-    
-    $explodedDate = explode( '/', $task["due_date"]);
-    
-    $year = "";
-    $month = "";
-    $day = "";
-    if(count($explodedDate) > 2) {
-        $month = $explodedDate[0];
-        $day = $explodedDate[1];
-        $year = $explodedDate[2];
-    }
-    
-    $hour = "";
-    $minute = "";
-    if($task["due_am_or_pm"] == "AM"){
-        if(intval($task["due_hour"]) == 12) {
-            $hour = "00";
-        } else {
-            $hour = "0" . intval($task["due_hour"]);
-        }
-        
-        $minute = $task["due_minute"];
-    } else {
-        if(intval($task["due_hour"]) == 12) {
-            $hour = 12;
-        } else {
-            $hour = intval($task["due_hour"])+12;
-        }
-        $minute = $task["due_minute"];
-    }
-    
-    $endDateTime = $year . "-" . $month . "-" . $day . "T" . $hour . ":" . $minute . ":00";
-    $dtInput = $year . "-" . $month . "-" . $day . " " . $hour . ":" . $minute . ":00.00";
-    
-    $startDateTime = "";
-    
-    // use endTime - 1 hour for start time. but if due_hour is 12 and due_am_or_pm is am then make start dat the day before (need to use datetime library because of uneven month lengths) and start hour 23.
-    
-    $format = 'Y-m-d H:i:s';
-    $tempDT = new DateTime($dtInput);
-    $tempDT->modify('-1 hour'); 
-    $startDateTime =  str_replace(" ", "T", $tempDT->format($format));
-    
-    //print ("start: $startDateTime , end: $endDateTime <br/>");
-    
-    // need to check if the event is already on the calendar by checking all of the  Google calendar event descriptions of events in the calendar with id = $logiCalId for an event with a description that matches $task["id"]. in the future, upon task creation, events should be created for that task and put in an Events table. The event ids should correspond to the Google calendar event descriptions.
-    
-    $evtAlreadyExists = false;
-    
-    foreach ($eventList["items"] as $tempEvt) {
-        if($tempEvt["description"] == $task["id"]) {
-            $evtAlreadyExists = true;
-        }
-    }
-    
-    if($evtAlreadyExists == false) {
-        $start->setDateTime($startDateTime);
-        $start->setTimeZone($logiCalTimeZone);
-        $event->setStart($start);
-        $end = new Google_EventDateTime();
-        $end->setDateTime($endDateTime);
-        $end->setTimeZone($logiCalTimeZone);
-        $event->setEnd($end);
-        $createdEvent = $cal->events->insert($logiCalId, $event);
-    }
-    
-    /////////////////////////////////////////////////////////////
-    
-    
-  }
-*/  
-  
-  // Create an event
-  /*
-  $event = new Google_Event();
-  $event->setSummary('Sample LogiCal Task');
-  $start = new Google_EventDateTime();
-  $start->setDateTime('2013-02-12T10:00:00');
-  $start->setTimeZone($logiCalTimeZone);
-  $event->setStart($start);
-  $end = new Google_EventDateTime();
-  $end->setDateTime('2013-02-12T20:30:00');
-  $end->setTimeZone($logiCalTimeZone);
-  $event->setEnd($end);
-  $createdEvent = $cal->events->insert($logiCalId, $event); 
-  */
-  ////////////////////////////////////////////
-  
-  // The access token may have been updated lazily.
-  $_SESSION['token'] = $client->getAccessToken();
-?>
-
 </body></html>  
-  
-<?php  
+
+<?php
+  // The access token may have been updated lazily.
+  $_SESSION['token'] = $client->getAccessToken(); 
   }
 } else {
   $authUrl = $client->createAuthUrl();

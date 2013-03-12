@@ -111,19 +111,31 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
     
     $event = new Google_Event();
     $event->setSummary($what . " is due now");
-    $event->setDescription($id);
+    $event->setDescription($id); // TODO: remove this line
     
     $start = new Google_EventDateTime();
     $start->setDateTime($startDateTime);
-    $start->setTimeZone($logiCalTimeZone);
+    $start->setTimeZone("America/New_York");
     $event->setStart($start);
     
     $end = new Google_EventDateTime();
     $end->setDateTime($endDateTime);
-    $end->setTimeZone($logiCalTimeZone);
+    $end->setTimeZone("America/New_York");
     $event->setEnd($end);
     
-    $createdEvent = $cal->events->insert($logiCalId, $event);
+    $createdEvent = $cal->events->insert($ltCal->getId(), $event);
+    
+    //print_r ($createdEvent);
+    
+    require('db/config.php');
+    $mysqli = new mysqli($host, $username, $password, $db);                    
+    if ($stmt = $mysqli->prepare("INSERT INTO TaskEvents (task_id, email, start_time, end_time, event_id) VALUES (?,?,?,?,?);")) {
+        $stmt->bind_param('issss', $id, $_SESSION['email'], $startDateTime, $endDateTime, $createdEvent['id']);
+        $stmt->execute();
+        $stmt->close();
+    }
+    
+    $mysqli->close();
     
     /////////////////////////////////////////////////////////////////
     
