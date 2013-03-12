@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 04, 2013 at 10:39 AM
+-- Generation Time: Mar 12, 2013 at 05:02 PM
 -- Server version: 5.5.30
 -- PHP Version: 5.2.17
 
@@ -23,19 +23,31 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `Calendars`
+--
+
+DROP TABLE IF EXISTS `Calendars`;
+CREATE TABLE IF NOT EXISTS `Calendars` (
+  `email` varchar(200) NOT NULL,
+  `google_calendar_id` varchar(200) NOT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `TaskEvents`
 --
 
 DROP TABLE IF EXISTS `TaskEvents`;
 CREATE TABLE IF NOT EXISTS `TaskEvents` (
-  `event_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `task_id` int(10) unsigned NOT NULL,
   `email` varchar(200) NOT NULL,
   `start_time` varchar(29) NOT NULL,
   `end_time` varchar(29) NOT NULL,
-  `added_to_g_cal` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`event_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=101 ;
+  `event_id` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`email`,`start_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -55,7 +67,7 @@ CREATE TABLE IF NOT EXISTS `Tasks` (
   `estimated_effort` double NOT NULL,
   `task_distribution` int(3) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=25 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=52 ;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
