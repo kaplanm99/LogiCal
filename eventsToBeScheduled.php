@@ -4,15 +4,33 @@ function eventsToBeScheduled($cal, $calList, $sliderValue, $effortHours, $dueDat
 
   $fBRequest = new Google_FreeBusyRequest();
   
+  // Instead of always using America/New_York, we should query the users 
+  // google calendar settings and get timeZone
   $currentTime = new DateTime(NULL, new DateTimeZone('America/New_York'));
   
   $format = 'Y-m-d H:i:s';
-  $timeMin =  str_replace(" ", "T", $currentTime->format($format)) . ".000-05:00";
+  
+  $dateTZ = new DateTimeZone("America/New_York");
+  $dateT = new DateTime("now", $dateTZ);
+  $tzOffset = timezone_offset_get( $dateTZ , $dateT )/3600;
+  
+  if($tzOffset>9 || $tzOffset<-9) {
+    $tzOffset = $tzOffset . "";
+  } else {
+    $tzOffset = $tzOffset . "";
+    $tzOffset=substr_replace($tzOffset, "0", 1, 0);
+  }
+  
+  $timeMin =  str_replace(" ", "T", $currentTime->format($format)) . ".000" . $tzOffset . ":00";
+  
+  //print ($timeMin . "<br/>");
   
   $fBRequest->setTimeMin($timeMin);
   //$fBRequest->setTimeMax("2013-03-12T12:57:00.000-05:00");
   
   //print($dueDateTime);
+  
+  $dueDateTime = $dueDateTime . ".000" . $tzOffset . ":00";
   
   $fBRequest->setTimeMax($dueDateTime);
   
@@ -79,7 +97,7 @@ function eventsToBeScheduled($cal, $calList, $sliderValue, $effortHours, $dueDat
   
   foreach ($freeBusy["calendars"] as $tempCal) {
     foreach ($tempCal["busy"] as $tempEvent) {
-        //print (substr($tempEvent["start"], 0, 19) . ".00");
+        //print (substr($tempEvent["start"], 0, 19) . ".00\n");
         
         //same day
         if(substr($tempEvent["start"], 0, 10) == substr($tempEvent["end"], 0, 10)) {

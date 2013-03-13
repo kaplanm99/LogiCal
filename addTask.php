@@ -139,7 +139,7 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
     
     /////////////////////////////////////////////////////////////////
     
-    $eventsToBeScheduled = eventsToBeScheduled($cal, $calList, $task_distribution, $estimated_effort, ($endDateTime . ".000-05:00"));
+    $eventsToBeScheduled = eventsToBeScheduled($cal, $calList, $task_distribution, $estimated_effort, $endDateTime);
     /*
     foreach($eventsToBeScheduled as $evt) {
       print($evt."<br/>");
