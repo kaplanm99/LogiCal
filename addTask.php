@@ -115,12 +115,12 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
     
     $start = new Google_EventDateTime();
     $start->setDateTime($startDateTime);
-    $start->setTimeZone("America/New_York");
+    $start->setTimeZone($timeZone);
     $event->setStart($start);
     
     $end = new Google_EventDateTime();
     $end->setDateTime($endDateTime);
-    $end->setTimeZone("America/New_York");
+    $end->setTimeZone($timeZone);
     $event->setEnd($end);
     
     $createdEvent = $cal->events->insert($ltCal->getId(), $event);
@@ -139,7 +139,7 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
     */
     /////////////////////////////////////////////////////////////////
     
-    $eventsToBeScheduled = eventsToBeScheduled($cal, $calList, $task_distribution, $estimated_effort, $endDateTime);
+    $eventsToBeScheduled = eventsToBeScheduled($cal, $calList, $task_distribution, $estimated_effort, $endDateTime, $timeZone);
     /*
     foreach($eventsToBeScheduled as $evt) {
       print($evt."<br/>");
@@ -167,12 +167,12 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
             
             $start = new Google_EventDateTime();
             $start->setDateTime($startDT);
-            $start->setTimeZone("America/New_York");
+            $start->setTimeZone($timeZone);
             $event->setStart($start);
             
             $end = new Google_EventDateTime();
             $end->setDateTime($endDT);
-            $end->setTimeZone("America/New_York");
+            $end->setTimeZone($timeZone);
             $event->setEnd($end);
             
             unset($createdEvent);

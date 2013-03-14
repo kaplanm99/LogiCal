@@ -41,7 +41,17 @@ if ($client->getAccessToken()) {
 
   $email = filter_var($user['email'], FILTER_SANITIZE_EMAIL);
   $_SESSION['email'] = $email;
+  
+  $settings = $cal->settings->listSettings();
 
+  $timeZone = "America/New_York";
+  
+  foreach($settings['items'] as $setting) {
+      if($setting['id'] == "timezone") {
+          $timeZone = $setting['value'];
+      }
+  }
+  
   ////////////////////////////////////////////
   
   $calList = $cal->calendarList->listCalendarList();
@@ -53,7 +63,7 @@ if ($client->getAccessToken()) {
   if($ltCal->getId() == "") {
     $calendar = new Google_Calendar();
     $calendar->setSummary('LogiCal Tasks');
-    $calendar->setTimeZone("America/New_York");
+    $calendar->setTimeZone($timeZone);
 
     $createdCalendar = $cal->calendars->insert($calendar);
     

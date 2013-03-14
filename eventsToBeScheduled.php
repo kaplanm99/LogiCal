@@ -1,16 +1,16 @@
 <?php
 
-function eventsToBeScheduled($cal, $calList, $sliderValue, $effortHours, $dueDateTime) {
+function eventsToBeScheduled($cal, $calList, $sliderValue, $effortHours, $dueDateTime, $timeZone) {
 
   $fBRequest = new Google_FreeBusyRequest();
   
   // Instead of always using America/New_York, we should query the users 
   // google calendar settings and get timeZone
-  $currentTime = new DateTime(NULL, new DateTimeZone('America/New_York'));
+  $currentTime = new DateTime(NULL, new DateTimeZone($timeZone));
   
   $format = 'Y-m-d H:i:s';
   
-  $dateTZ = new DateTimeZone("America/New_York");
+  $dateTZ = new DateTimeZone($timeZone);
   $dateT = new DateTime("now", $dateTZ);
   $tzOffset = timezone_offset_get( $dateTZ , $dateT )/3600;
   
@@ -34,7 +34,7 @@ function eventsToBeScheduled($cal, $calList, $sliderValue, $effortHours, $dueDat
   
   $fBRequest->setTimeMax($dueDateTime);
   
-  $fBRequest->setTimeZone("America/New_York");
+  $fBRequest->setTimeZone($timeZone);
   
   $fbRequestItems = array();
   
