@@ -138,6 +138,8 @@ if ($client->getAccessToken()) {
 <body>
 
 <?php
+      require ("deleteTask.php");
+      
       require ("addTask.php");
       
       require ("getTasks.php");
