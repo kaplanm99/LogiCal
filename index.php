@@ -49,7 +49,6 @@ if ($client->getAccessToken()) {
   
   require('LogiCalTasksCalendar.php');
   $ltCal = new LogiCalTasksCalendar($_SESSION['email'] );
-  //$ltCal->setId("1");
   
   if($ltCal->getId() == "") {
     $calendar = new Google_Calendar();
@@ -74,13 +73,6 @@ if ($client->getAccessToken()) {
         // need to remake calendar using code above
     }  
   }
-  
-  if(isset($_GET["addATaskEvent"])) {
-    // a GET request with this parameter equal to 1 should be made
-    // with a jQuery GET AJAX call every 1 second (with setTimeout)
-    // until that request has a response of "done".
-    require ("addATaskEvent.php");  
-  } else {
   
 ?>
 
@@ -207,7 +199,7 @@ if ($client->getAccessToken()) {
 <?php
   // The access token may have been updated lazily.
   $_SESSION['token'] = $client->getAccessToken(); 
-  }
+  
 } else {
   $authUrl = $client->createAuthUrl();
   print "<a class='login' href='$authUrl'>Connect Me!</a>";

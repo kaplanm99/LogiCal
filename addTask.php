@@ -126,7 +126,7 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
     $createdEvent = $cal->events->insert($ltCal->getId(), $event);
     
     //print_r ($createdEvent);
-    
+    /*
     require('db/config.php');
     $mysqli = new mysqli($host, $username, $password, $db);                    
     if ($stmt = $mysqli->prepare("INSERT INTO TaskEvents (task_id, email, start_time, end_time, event_id) VALUES (?,?,?,?,?);")) {
@@ -136,7 +136,7 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
     }
     
     $mysqli->close();
-    
+    */
     /////////////////////////////////////////////////////////////////
     
     $eventsToBeScheduled = eventsToBeScheduled($cal, $calList, $task_distribution, $estimated_effort, $endDateTime);
@@ -148,9 +148,9 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
     */
     require('db/config.php');
     $mysqli = new mysqli($host, $username, $password, $db);                    
-    if ($stmt = $mysqli->prepare("INSERT INTO TaskEvents (task_id, email, start_time, end_time) VALUES (?,?,?,?);")) {
-        //$stmt->bind_param('isss', $id, $_SESSION['email'], $startDateTime, $endDateTime);
-        //$stmt->execute();
+    if ($stmt = $mysqli->prepare("INSERT INTO TaskEvents (task_id, email, start_time, end_time, event_id) VALUES (?,?,?,?,?);")) {
+        $stmt->bind_param('issss', $id, $_SESSION['email'], $startDateTime, $endDateTime, $createdEvent['id']);
+        $stmt->execute();
         
         foreach($eventsToBeScheduled as $evt) {
             //print($evt."<br/>");
@@ -161,7 +161,26 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
           
             $endDT = $evtDate . substr($evt, 17,5) . ":00"; 
           
-            $stmt->bind_param('isss', $id, $_SESSION['email'], $startDT, $endDT);
+            $event = new Google_Event();
+            $event->setSummary($what);
+            $event->setDescription("");
+            
+            $start = new Google_EventDateTime();
+            $start->setDateTime($startDT);
+            $start->setTimeZone("America/New_York");
+            $event->setStart($start);
+            
+            $end = new Google_EventDateTime();
+            $end->setDateTime($endDT);
+            $end->setTimeZone("America/New_York");
+            $event->setEnd($end);
+            
+            unset($createdEvent);
+            
+            $createdEvent = $cal->events->insert($ltCal->getId(), $event);
+          
+          
+            $stmt->bind_param('issss', $id, $_SESSION['email'], $startDT, $endDT, $createdEvent['id']);
             $stmt->execute();
         }
     
