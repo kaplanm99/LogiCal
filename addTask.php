@@ -152,6 +152,9 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
         $stmt->bind_param('issss', $id, $_SESSION['email'], $startDateTime, $endDateTime, $createdEvent['id']);
         $stmt->execute();
         
+        $client->setUseBatch(true);
+        $batch = new Google_BatchRequest();
+        
         foreach($eventsToBeScheduled as $evt) {
             //print($evt."<br/>");
             
@@ -175,15 +178,18 @@ if(isset($_SESSION['email']) && isset($_POST["what"]) && isset($_POST["due_date"
             $end->setTimeZone($timeZone);
             $event->setEnd($end);
             
-            unset($createdEvent);
-            
-            $createdEvent = $cal->events->insert($ltCal->getId(), $event);
-          
-          
-            $stmt->bind_param('issss', $id, $_SESSION['email'], $startDT, $endDT, $createdEvent['id']);
-            $stmt->execute();
+            $batch->add($cal->events->insert($ltCal->getId(), $event));
         }
-    
+        
+        $result = $batch->execute();
+
+        foreach($result as $response) {
+            $stmt->bind_param('issss', $id, $_SESSION['email'], $response['start']['dateTime'], $response['end']['dateTime'], $response['id']);
+            $stmt->execute();            
+        }
+        
+        $client->setUseBatch(false);
+        
         $stmt->close();
     }
        

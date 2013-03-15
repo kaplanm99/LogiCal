@@ -18,7 +18,20 @@ function popupTaskForm () {
 function changeTaskDistribution(event, ui) {
     $("#task_distribution").attr('value',ui.value);
 }
+/*
+function editTask(t_what, t_due_date, t_due_hour, t_due_minute, t_due_am_or_pm, t_estimated_effort, t_task_distribution, t_slider) {
+    form.what.value = t_what;
+    form.due_date.value = t_due_date;
+    form.due_hour.value = t_due_hour;
+    form.due_minute.value = t_due_minute;
+    form.due_am_or_pm.value = t_due_am_or_pm;    
+    form.estimated_effort.value = t_estimated_effort;
+    form.task_distribution = t_task_distribution;
+    $("#slider" ).slider("value",t_slider);
 
+    popupTaskForm();
+}
+*/
 $(document).ready(function(){
     $( "#slider" ).slider({
       slide: changeTaskDistribution
@@ -33,5 +46,5 @@ $(document).ready(function(){
     $( "#ui-datepicker-div" ).css("font-size", "50%");
     $( ".ui-slider-handle" ).css("z-index", "1");
     
-    var result = "";           
+    $( ".task" ).click()          
 });

@@ -14,10 +14,17 @@ if(isset($_SESSION['email']) && isset($_POST["deleteId"])) {
         $stmt->execute();
         
         $stmt->bind_result($delete_event_id);
-                    
+        
+        $client->setUseBatch(true);
+        $batch = new Google_BatchRequest();
+        
         while($stmt->fetch()) {
-            $cal->events->delete($ltCal->getId(), $delete_event_id);
-        }    
+            $batch->add($cal->events->delete($ltCal->getId(), $delete_event_id));        
+        }
+        
+        $result = $batch->execute();
+        $client->setUseBatch(false);
+
         $stmt->close();
     }
        
