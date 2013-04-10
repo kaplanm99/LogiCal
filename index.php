@@ -21,7 +21,8 @@ $oauth2 = new Google_Oauth2Service($client);
 if (isset($_GET['code'])) {
   $client->authenticate($_GET['code']);
   $_SESSION['token'] = $client->getAccessToken();
-  $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+  //$redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+  $redirect = 'https://www.google.com/calendar/render?tab=cc';
   header('Location: ' . filter_var($redirect, FILTER_SANITIZE_URL));
   return;
 }
@@ -153,7 +154,7 @@ if ($client->getAccessToken()) {
       }
 ?>
 
-<div style="width:160px;height:500px;border:1px solid black;position:relative;">
+<div style="width:160px;height:500px;position:relative;">
   <div id="formPopup">
       <h3>New Task</h3>
       <form name="myform" action="index.php" method="POST">
@@ -214,7 +215,7 @@ if ($client->getAccessToken()) {
   
 } else {
   $authUrl = $client->createAuthUrl();
-  print "<a class='login' href='$authUrl'>Connect Me!</a>";
+  print "<a class='login' target='_blank' href='$authUrl'>Connect Me!</a>";
 }
 
 ?>

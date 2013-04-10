@@ -15,16 +15,22 @@ if(isset($_SESSION['email']) && isset($_POST["deleteId"])) {
         
         $stmt->bind_result($delete_event_id);
         
-        $client->setUseBatch(true);
-        $batch = new Google_BatchRequest();
+        try 
+        {
+            $client->setUseBatch(true);
+            $batch = new Google_BatchRequest();
+            
+            while($stmt->fetch()) {
+                $batch->add($cal->events->delete($ltCal->getId(), $delete_event_id));        
+            }
+            
+            $result = $batch->execute();
+            $client->setUseBatch(false);
         
-        while($stmt->fetch()) {
-            $batch->add($cal->events->delete($ltCal->getId(), $delete_event_id));        
+        } catch (Exception $e) {
+            //echo 'Caught exception: ',  $e->getMessage(), "\n";
         }
         
-        $result = $batch->execute();
-        $client->setUseBatch(false);
-
         $stmt->close();
     }
        
