@@ -119,12 +119,24 @@ if ($client->getAccessToken()) {
         margin-bottom: -1px;
     }
     .taskList {
-        height:427px;overflow-y:auto;
+        height:461px;
+        overflow-y:auto;
+        clear: both;
     }
     
-    .logout {
-        float: right;
-        margin-right: 5px;
+    .headerButton {
+        float: left;
+        margin: 2px;
+        text-decoration: none;
+        background: #f5f5f5;
+        border: 1px solid #dcdcdc;
+        color: #444;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 2px;
+        text-align: center;
+        border-radius: 2px;
     }
     
 </style>
@@ -150,14 +162,24 @@ if ($client->getAccessToken()) {
       $taskListMarkup = "";
       
       foreach ($tasks as $task) {
-        $taskListMarkup = $taskListMarkup . "<div class=\"task\" ><form action=\"index.php\" method=\"POST\"><input type=\"hidden\" name=\"deleteId\" value=\"" . $task["id"] . "\" ><input type=\"image\" src=\"deleteButton.png\" class=\"deleteButton\" ></form>" . $task["what"] . "<br/>Due: " . $task["due_date"] . " " . $task["due_hour"] . ":" . $task["due_minute"] . $task["due_am_or_pm"] . "<br/>Hours Remaining: " . $task["estimated_effort"] . "</div>";
+        $taskListMarkup = $taskListMarkup . "
+        <div class=\"task\" >
+            <form action=\"index.php\" method=\"POST\">
+                <input type=\"hidden\" name=\"deleteId\" value=\"" . $task["id"] . "\" >
+                <input type=\"image\" src=\"deleteButton.png\" class=\"deleteButton\" >
+            </form>
+            <span onclick=\"editTask('".$task["what"]."', '".$task["due_date"]."', '".$task["due_hour"]."', '".$task["due_minute"]."', '".$task["due_am_or_pm"]."', '".$task["estimated_effort"]."', '".$task["task_distribution"]."');\" >" . 
+            $task["what"] . 
+            "<br/>Due: " . $task["due_date"] . " " . $task["due_hour"] . ":" . $task["due_minute"] . $task["due_am_or_pm"] . 
+            "<br/>Hours Remaining: " . $task["estimated_effort"] . 
+        "</span></div>";
       }
 ?>
 
-<div style="width:160px;height:500px;position:relative;">
+<div style="width:160px;height:500px;position:relative;font: 12px Arial,sans-serif;">
   <div id="formPopup">
       <h3>New Task</h3>
-      <form name="myform" action="index.php" method="POST">
+      <form id="myform" name="myform" action="index.php" method="POST">
           <p style="margin: 0px;">  
             What<textarea rows="4" cols="17" name="what"></textarea>
             <br><br>
@@ -181,21 +203,15 @@ if ($client->getAccessToken()) {
         </p>
       </form>      
   </div>
-  <img src="logo.png" style="float: left;width: 100px;"/>
-  
   <?php
-    print "<a class='logout' href='?logout'>Logout</a>";
-  
     if(isset($_SESSION['email'] )){ 
         print "<span id=\"email\">";
         print $_SESSION['email']; 
         print "</span>";
-    }
+    }  
   ?>
-  <form NAME="add" ACTION="" METHOD="GET">
-      <input TYPE="button" NAME="createTask" Value="Create Task" onClick="popupTaskForm();">
-  </form>
-  
+  <span onclick="popupTaskForm();" class="headerButton">Create Task</span>
+  <a class="headerButton" href="?logout">Logout</a>
   <div class="taskList" >
       <div id="content_div">
       <?
