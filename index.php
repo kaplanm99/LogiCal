@@ -175,9 +175,20 @@ if ($client->getAccessToken()) {
       $taskListMarkup = "";
       
       foreach ($tasks as $task) {
+        
+        $jsWhat = $task["what"];
+        $jsWhat = str_replace("\r\n", "\\n", $jsWhat);
+        
+        $jsSubtasks = $task["subtasks"];
+        $jsSubtasks = str_replace("\r\n", "\\n", $jsSubtasks);
+        
+        $taskListWhat = $task["what"];
+        $taskListWhat = str_replace("\r\n", "<br>", $taskListWhat);
+        
+        
         $taskListMarkup = $taskListMarkup . "
         <div class=\"task\" >
-            <div class=\"taskArrow\" title=\"Interact with this task\" style=\"display:none;float: right;color: rgb(37, 73, 167);   font-weight: bold;font-size: 20px;position: relative;cursor: pointer;top: -4px;\" onclick=\"interactWithTask('" . $task["id"] . "', '" . $task["what"]."', '".$task["due_date"]."', '".$task["due_hour"]."', '".$task["due_minute"]."', '".$task["due_am_or_pm"]."', '".$task["estimated_effort"]."', '".$task["task_distribution"]."');\" >&gt;</div><div>" . $task["what"] . 
+            <div class=\"taskArrow\" title=\"Interact with this task\" style=\"display:none;float: right;color: rgb(37, 73, 167);   font-weight: bold;font-size: 20px;position: relative;cursor: pointer;top: -4px;\" onclick=\"interactWithTask('" . $task["id"] . "', '" . $jsWhat ."', '".$task["due_date"]."', '".$task["due_hour"]."', '".$task["due_minute"]."', '".$task["due_am_or_pm"]."', '".$task["estimated_effort"]."', '".$task["task_distribution"]."', '".$jsSubtasks."');\" >&gt;</div><div>" . $taskListWhat . 
             "</div><div style=\"color: grey;font-size: 9px;padding-top: 2px;\">Due " . $task["due_date"] . 
             ", " . $task["estimated_effort"] . " Hrs Left</div></div>";
       }
@@ -208,12 +219,12 @@ if ($client->getAccessToken()) {
       
       <p style="margin: 0px;">
           Subtasks/Details
-          <textarea rows="8" cols="17" name="subtasks" style="margin: 2px; height: 300px; width: 153px;"></textarea>
+          <textarea rows="8" cols="17" id="subtasks" name="subtasks" style="margin: 2px; height: 300px; width: 153px;"></textarea>
           <br>            
       </p>
             
       <p style="height: 20px;margin: 0px;text-align: center;">
-        <span class="headerButton" style="margin-top: 2px;  margin-bottom: 2px;">Save</span>
+        <input type="submit" name="saveSubtasks" class="headerButton" style="margin-top: 2px; margin-bottom: 2px;" value="Save">
         <span class="headerButton" onclick="cancelTaskForm(this.form);">Cancel</span>
       </p>
       

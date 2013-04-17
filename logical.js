@@ -33,11 +33,11 @@ function changeHoursCompleted() {
 
 }
 
-function interactWithTask(t_id, t_what, t_due_date, t_due_hour, t_due_minute, t_due_am_or_pm, t_estimated_effort, t_task_distribution) {
+function interactWithTask(t_id, t_what, t_due_date, t_due_hour, t_due_minute, t_due_am_or_pm, t_estimated_effort, t_task_distribution, t_subtasks) {
     // need a hidden editTaskId form to be set to taskId and reset to -1 if cancelled.
     
     document.getElementById('taskId').value = t_id;
-    
+    document.getElementById('subtasks').value = t_subtasks;
     
     document.getElementById('myform').what.value = t_what;
     document.getElementById('myform').due_date.value = t_due_date;
