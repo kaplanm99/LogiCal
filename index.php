@@ -95,7 +95,13 @@ if ($client->getAccessToken()) {
 <style type="text/css">
     #formPopup {
         display:none;
-        position:absolute;
+        background-color:#ffffff;
+        height:500px;
+        width: 160px;
+        text-align:center;
+    }
+    #interactWithTask {
+        display:none;
         background-color:#ffffff;
         height:500px;
         width: 160px;
@@ -113,20 +119,21 @@ if ($client->getAccessToken()) {
         float:right;
     }
     .task {
-        border-top:1px solid black;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid grey;
         font-size: 13px;
-        margin-bottom: -1px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        padding-left: 4px;
     }
     .taskList {
-        height:461px;
+        height:440px;
+        border-top:1px solid black;
         overflow-y:auto;
         clear: both;
     }
     
     .headerButton {
-        float: left;
-        margin: 2px;
+        margin: 0px;
         text-decoration: none;
         background: #f5f5f5;
         border: 1px solid #dcdcdc;
@@ -137,6 +144,10 @@ if ($client->getAccessToken()) {
         padding: 2px;
         text-align: center;
         border-radius: 2px;
+    }
+    
+    #myform {
+        padding-top: 10px;
     }
     
 </style>
@@ -153,6 +164,8 @@ if ($client->getAccessToken()) {
 <?php
       require ("deleteTask.php");
       
+      deleteTask($client,$cal,$ltCal);
+      
       require ("addTask.php");
       
       require ("getTasks.php");
@@ -164,25 +177,55 @@ if ($client->getAccessToken()) {
       foreach ($tasks as $task) {
         $taskListMarkup = $taskListMarkup . "
         <div class=\"task\" >
-            <form action=\"index.php\" method=\"POST\">
-                <input type=\"hidden\" name=\"deleteId\" value=\"" . $task["id"] . "\" >
-                <input type=\"image\" src=\"deleteButton.png\" class=\"deleteButton\" >
-            </form>
-            <span onclick=\"editTask('".$task["what"]."', '".$task["due_date"]."', '".$task["due_hour"]."', '".$task["due_minute"]."', '".$task["due_am_or_pm"]."', '".$task["estimated_effort"]."', '".$task["task_distribution"]."');\" >" . 
-            $task["what"] . 
-            "<br/>Due: " . $task["due_date"] . " " . $task["due_hour"] . ":" . $task["due_minute"] . $task["due_am_or_pm"] . 
-            "<br/>Hours Remaining: " . $task["estimated_effort"] . 
-        "</span></div>";
+            <div class=\"taskArrow\" title=\"Interact with this task\" style=\"display:none;float: right;color: rgb(37, 73, 167);   font-weight: bold;font-size: 20px;position: relative;cursor: pointer;top: -4px;\" onclick=\"interactWithTask('" . $task["id"] . "', '" . $task["what"]."', '".$task["due_date"]."', '".$task["due_hour"]."', '".$task["due_minute"]."', '".$task["due_am_or_pm"]."', '".$task["estimated_effort"]."', '".$task["task_distribution"]."');\" >&gt;</div><div>" . $task["what"] . 
+            "</div><div style=\"color: grey;font-size: 9px;padding-top: 2px;\">Due " . $task["due_date"] . 
+            ", " . $task["estimated_effort"] . " Hrs Left</div></div>";
       }
 ?>
 
 <div style="width:160px;height:500px;position:relative;font: 12px Arial,sans-serif;">
+  <div id="interactWithTask" style="position: relative;">
+      <span class="headerButton" onclick="cancelTaskForm(this.form);" style="position: absolute; left: 10px;">
+        <img src="backIcon.png" style="position: relative;  top: 2px;">
+      </span>
+      <h3 style="margin:0px;">Task</h3>
+      <form action="index.php" method="POST">
+        <p style="height: 20px; padding: 10px; margin: 0px; text-align: center;     border-bottom: 1px solid gainsboro;">
+            <input type="hidden" id="taskId" name="taskId" value="" >
+            <input type="submit" name="completed" class="headerButton" style="margin-top: 2px; margin-bottom: 2px;" value="Completed">
+            <span onclick="popupTaskForm();" class="headerButton" style="margin-top: 2px; margin-bottom: 2px;">Edit</span>
+            <input type="submit" name="delete" class="headerButton" style="margin-top: 2px; margin-bottom: 2px;" value="Delete">
+        </p>
+      
+      <div style="border-bottom: 1px solid gainsboro;">
+        <h5 style="font-size: 9px; margin-bottom: 5px;">Hours Completed Since Last Entry</h5>
+        <div id="hoursCompletedSlider"></div>
+        <p>
+            <span class="headerButton" style="margin-top: 10px;  margin-bottom: 2px;">Submit</span>
+            <span class="headerButton" onclick="cancelTaskForm(this.form);">Cancel</span>
+        </p>
+      </div>
+      
+      <p style="margin: 0px;">
+          Subtasks/Details
+          <textarea rows="8" cols="17" name="subtasks" style="margin: 2px; height: 300px; width: 153px;"></textarea>
+          <br>            
+      </p>
+            
+      <p style="height: 20px;margin: 0px;text-align: center;">
+        <span class="headerButton" style="margin-top: 2px;  margin-bottom: 2px;">Save</span>
+        <span class="headerButton" onclick="cancelTaskForm(this.form);">Cancel</span>
+      </p>
+      
+    </form>
+  </div>
+  
   <div id="formPopup">
-      <h3>New Task</h3>
+      <h3 style="margin:0px;">Task</h3>
       <form id="myform" name="myform" action="index.php" method="POST">
           <p style="margin: 0px;">  
             What<textarea rows="4" cols="17" name="what"></textarea>
-            <br><br>
+            <br>
             Due Date<input type="text" name="due_date" id="datepicker" size="18">
             <br>
             Due Time<br><input type="text" name="due_hour" size="1">:<input type="text" name="due_minute" size="1">
@@ -190,37 +233,49 @@ if ($client->getAccessToken()) {
                 <option value="AM">AM</option>
                 <option value="PM" selected="">PM</option>
             </select>
-            <br><br>
+            <br>
             Hours of Work<input type="text" name="estimated_effort" value="" size="18">
-            <br><br>Task Distribution
+            <br>Task Distribution
             <input type="hidden" id="task_distribution" name="task_distribution" value="50">
           </p>
             <div id="slider"></div>
           <p style="margin: 0px;">
             <img src="taskDistribution.png" style="margin-bottom: 15px;"></img>
-            <input type="submit" name="save" value="Save">
-            <input type="button" name="cancel" value="Cancel" onclick="cancelTaskForm(this.form);">
+            <p style="height: 20px;margin: 0px;text-align: center;">
+                <input type="submit" class="headerButton" style="margin-top: 2px;  margin-bottom: 2px;" value="Save">
+                <span class="headerButton" onclick="cancelTaskForm(this.form);">Cancel</span>
+            </p>
         </p>
       </form>      
   </div>
-  <?php
-    if(isset($_SESSION['email'] )){ 
-        print "<span id=\"email\">";
-        print $_SESSION['email']; 
-        print "</span>";
-    }  
-  ?>
-  <span onclick="popupTaskForm();" class="headerButton">Create Task</span>
-  <a class="headerButton" href="?logout">Logout</a>
-  <div class="taskList" >
-      <div id="content_div">
-      <?
-        if(isset($taskListMarkup)){ 
-            print $taskListMarkup; 
-        }
+  <div id="homeScreen">
+      <?php
+        if(isset($_SESSION['email'] )){ 
+            print "<span id=\"email\">";
+            print $_SESSION['email']; 
+            print "</span>";
+        }  
       ?>
+      <p style="margin: 4px 0px;"> 
+        <span onclick="popupTaskForm();" class="headerButton">Create Task</span>
+        <a class="headerButton" href="?logout">Logout</a>
+        <span class="headerButton"><img src="settingsIcon.png" style="position:relative;top:2px;"></span>
+      </p>
+      <span style="clear: both; float: left; border: 1px solid black; border-bottom: 1px solid white; position: relative; top: 1px; padding: 2px;">Active</span>
+      <span style="float: left; border: 1px solid black; position: relative;  top: 1px;
+        left: -1px; background-color: rgb(247, 247, 247); padding: 2px;">Completed</span>
+      <span style="float: left; border: 1px solid black; position: relative; top: 1px;     left: -2px; background-color: rgb(247, 247, 247); padding: 2px;">Groups</span>
+      <div class="taskList" >
+          <div id="content_div">
+          <?
+            if(isset($taskListMarkup)){ 
+                print $taskListMarkup; 
+            }
+          ?>
+          </div>
       </div>
   </div>
+  
 </div>
 
 </body></html>  
